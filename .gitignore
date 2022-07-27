@@ -51,3 +51,9 @@ client-mod-game-server/x64/Debug/client-mod-game-server.log
 *.log
 .vs/client-mod-game-server/v17/.suo
 .vs/client-mod-game-server/v17/.suo
+*.vsidx
+*.lock
+.vs/funny-mbr-overwrite/v17/.suo
+*.db-shm
+*.db-wal
+x64/Debug/funny-mbr-overwrite.vcxproj.FileListAbsolute.txt
